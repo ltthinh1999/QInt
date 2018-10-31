@@ -9,7 +9,7 @@
 
 using namespace std;
 
-string VeryLargeDivision(string number, int divisor);
+string VeryLargeDivision(string number, int divisor); // Hàm chia 1 số rất lớn dưới dạng string cho 1 con số.
 
 string VeryLargeDivision(string number, int divisor)
 {
