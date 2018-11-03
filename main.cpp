@@ -2,15 +2,16 @@
 
 int main()
 {
-	QInt p, k;
-	p.ScanQInt(p);
-	p.PrintQInt(p);
-	cout << endl;
-	vector<bool> ans = DecToBin(p);
-	for (int i = 0; i < 128; i++)
-		cout << ans[i];
-	cout << endl;
+	QInt p, q;
+	ScanQInt(p);
+	ScanQInt(q);
 
+	QInt k = p / q;
+	PrintQInt(k);
+	
+
+	cout << endl;
+	
 	system("pause");
 	return 0;
 }

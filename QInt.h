@@ -8,17 +8,22 @@ private:
 	int64_t head; // Phần bit chứa dấu âm hoặc dương (0 hoặc 1).
 	uint64_t body; // Phần đuôi của bit.
 
+	bool isZero();
+	bool isNegative();
 	vector<bool> GetBits(); // Lấy dãy bit của QInt.
 	void SaveBits(vector<bool> bits); // Lưu dãy bit vào QInt.
 	void TwosComplement(); // Bù 2.
 public:
 	QInt(); // Giá trị default của biến QInt (bằng 0).
+	QInt(uint64_t a);
 	~QInt();
-	void ScanQInt(QInt &x); // Nhập giá trị, lưu vào biến QInt.
+	friend void ScanQInt(QInt &x); // Nhập giá trị, lưu vào biến QInt.
 	string QIntToString(); // Chuyển các bit trong QInt thành 1 số rất lớn được lưu dưới dạng string.
-	void PrintQInt(QInt x); // Xuất biến QInt ra màn hình.
+	friend void PrintQInt(QInt x); // Xuất biến QInt ra màn hình.
 	friend vector<bool> DecToBin(QInt a);
 	friend QInt BinToDec(vector<bool> bits);
+	friend string BinToHex(vector<bool> bits);
+	friend string DecToHex(QInt a);
 	friend QInt operator+(QInt a, QInt b);
 	friend QInt operator-(QInt a, QInt b);
 	friend QInt operator*(QInt a, QInt b);
@@ -29,9 +34,31 @@ public:
 	friend QInt operator~(QInt a);
 	friend QInt operator<<(QInt a, uint64_t s);
 	friend QInt operator>>(QInt a, uint64_t s);
+	QInt& rol(int t);
+	QInt& ror(int t);
 	string Add2Strings(string& a, string& b); // Cộng 2 số rất lớn được biểu diễn bằng string.
 	string Sub2Strings(string& a, string& b); // Trừ 2 số rất lớn được biểu diễn bằng string.
 };
+
+bool QInt::isZero()
+{
+	vector<bool> bit = this->GetBits();
+
+	for (int i = 0; i < 128; i++)
+		if (bit[i] == 1)
+			return false;
+
+	return true;
+}
+
+bool QInt::isNegative()
+{
+	vector<bool> bit = this->GetBits();
+
+	if (bit[0])
+		return true;
+	return false;
+}
 
 vector<bool> QInt::GetBits()
 {
@@ -105,15 +132,21 @@ QInt::QInt()
 	body = 0;
 }
 
+QInt::QInt(uint64_t a)
+{
+	head = 0;
+	body = a;
+}
+
 QInt::~QInt()
 {}
 
-void QInt::ScanQInt(QInt &x) 
+void ScanQInt(QInt &x) 
 {
 	string largeNumber; // Nhập giá trị QInt dưới dạng string.
 	getline(cin, largeNumber);
 
-	head = body = 0;
+	x.head = x.body = 0;
 
 	bool Negative = false; // false: số dương | true: số âm.
 
@@ -136,11 +169,11 @@ void QInt::ScanQInt(QInt &x)
 
 	if (Negative) // Nếu là số âm
 	{
-		SaveBits(bits);       // Lưu dãy bit vào QInt.
-		TwosComplement();     // sau đó bù 2. 
+		x.SaveBits(bits);       // Lưu dãy bit vào QInt.
+		x.TwosComplement();     // sau đó bù 2. 
 	}
 	else
-		SaveBits(bits); // Nếu không thì lưu nhưng không bù.
+		x.SaveBits(bits); // Nếu không thì lưu nhưng không bù.
 }
 
 string QInt::QIntToString()
@@ -182,7 +215,7 @@ string QInt::QIntToString()
 	return str;
 }
 
-void QInt::PrintQInt(QInt x)
+void PrintQInt(QInt x)
 {
 	string ans = x.QIntToString();
 	cout << ans;
@@ -388,6 +421,106 @@ QInt operator-(QInt a, QInt b)       // a - b đồng nghĩa với a + bù 2 c�
 	return ans;
 }
 
+QInt operator*(QInt a, QInt b)
+{
+	vector<bool> bitA = a.GetBits();
+	vector<bool> bitB = b.GetBits();
+	bool isNegative = false;
+	QInt ans;
+	QInt One(1);
+
+	if ((bitA[0] && !bitB[0]) || (!bitA[0] && bitB[0]))
+		isNegative = true;
+
+	if (bitA[0])
+		a.TwosComplement();
+
+	if (bitB[0])
+	{
+		b.TwosComplement();
+		bitB = b.GetBits();
+	}
+
+	while (!(bitB[0] || b.isZero()))
+	{
+		if (((b & One) - One).isZero())
+			ans = ans + a;
+		a = a << 1;
+		b = b >> 1;
+		bitB = b.GetBits();
+	}
+
+	if (isNegative)
+		ans.TwosComplement();
+
+	return ans;
+}
+
+QInt operator/(QInt a, QInt b)
+{
+	bool isNegative = false;						// Check kết quả là âm hay dương. 
+
+	if (a.isNegative() && b.isNegative())			// Nếu cùng âm
+	{
+		isNegative = false;							// Kết quả là dương
+		a.TwosComplement();							// bù 2 a.
+		b.TwosComplement();							// bù 2 b.
+	}
+
+	else if (!a.isNegative() && !b.isNegative())	// Nếu cùng dương
+		isNegative = false;                         // Kết quả là dương. 
+
+	else                                            // Còn lại nếu trái dấu
+	{												
+		isNegative = true;							// Kết quả là âm.
+
+		if (a.isNegative())                         // Nếu a âm thì bù 2 a.
+			a.TwosComplement();
+
+		if (b.isNegative())							// Nếu b âm thì bù 2 b.
+			b.TwosComplement();
+	}
+
+	QInt temp;
+	vector<bool> bitA = a.GetBits();
+	vector<bool> bitB = b.GetBits();
+	vector<bool> bitT = temp.GetBits();
+	int k = bitA.size();
+
+
+	while (k > 0)									// Chia 2 số dương.
+	{
+		temp = temp << 1;							//|
+		bitT = temp.GetBits();						//|
+		bitT[127] = bitA[0];						//|
+		temp.SaveBits(bitT);						//|==>> Dịch trái [temp,a].
+		a = a << 1;									//|
+		bitA = a.GetBits();							//|
+
+		temp = temp - b;							
+		bitT = temp.GetBits();
+		
+		if (bitT[0])								// Nếu temp < 0.
+		{
+			temp = temp + b;						//Trả temp về giá trị cũ.
+			bitT = temp.GetBits();					
+		}
+
+		else                                        // Còn không thì
+		{
+			bitA[127] = 1;							// Bit cuối của a sẽ là 1.
+			a.SaveBits(bitA);
+		}
+
+		k--;
+	}
+
+	if (isNegative)									// Nếu kết quả là âm.
+		a.TwosComplement();
+
+	return a;
+}
+
 QInt operator&(QInt a, QInt b)
 {
 	QInt ans;
@@ -419,6 +552,7 @@ QInt operator|(QInt a, QInt b)
 	ans.SaveBits(bitAns);
 	return ans;
 }
+
 
 QInt operator^(QInt a, QInt b)
 {
@@ -485,6 +619,42 @@ QInt operator>>(QInt a, uint64_t s)
 	return ans;
 }
 
+QInt& QInt::rol(int t)
+{
+	vector<bool> bitAns = this->GetBits();
+
+	for (int i = 0; i < t; i++)
+	{
+		bool temp = bitAns[0];
+		for (int j = 0; j < 127; j++)
+			bitAns[j] = bitAns[j + 1];
+
+		bitAns[127] = temp;
+	}
+
+	this->SaveBits(bitAns);
+
+	return *this;
+}
+
+QInt& QInt::ror(int t)
+{
+	vector<bool> bitAns = this->GetBits();
+
+	for (int i = 0; i < t; i++)
+	{
+		bool temp = bitAns[127];
+		for (int j = 127; j > 0; j--)
+			bitAns[j] = bitAns[j - 1];
+
+		bitAns[0] = temp;
+	}
+
+	this->SaveBits(bitAns);
+
+	return *this;
+}
+
 QInt BinToDec(vector<bool> bits)
 {
 	QInt ans;
@@ -496,6 +666,45 @@ QInt BinToDec(vector<bool> bits)
 vector<bool> DecToBin(QInt a)
 {
 	vector<bool> ans = a.GetBits();
+
+	return ans;
+}
+
+string BinToHex(vector<bool> bits)
+{
+	string ans;
+	
+	reverse(bits.begin(), bits.end());
+	for (int i = 0; i < 128; i += 4)
+	{
+		int temp = 0;
+
+		for (int j = 0; j < 4; j++)
+			temp += bits[i + j] * pow(2, j);
+
+		if (temp >= 0 && temp <= 9)
+			ans += temp + '0';
+
+		else
+			ans += temp + '7';
+	}
+
+	reverse(ans.begin(), ans.end());
+	
+	int k = 0;
+	while (ans[k] == '0') // Xóa các số 0 bị thừa.
+	{
+		ans.erase(k, 1);
+	}
+
+	return ans;
+}
+
+string DecToHex(QInt a)
+{
+	vector<bool> tmp = a.GetBits();
+
+	string ans = BinToHex(tmp);
 
 	return ans;
 }
