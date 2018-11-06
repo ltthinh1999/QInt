@@ -208,8 +208,8 @@ string QInt::QIntToString()
 
 	if (bits[127]) // Nếu như bit dấu là 1 => số âm
 	{
-		tmp = "-170141183460469231731687303715884105728"; // = -2^128
-		str = Add2Strings(str, tmp); // Lấy -2^128 + tmp sẽ được số âm biểu diễn dưới dạng string.
+		tmp = "-170141183460469231731687303715884105728"; // = -2^127
+		str = Add2Strings(str, tmp); // Lấy -2^127 + tmp sẽ được số âm biểu diễn dưới dạng string.
 	}
 
 	return str;
@@ -502,8 +502,7 @@ QInt operator/(QInt a, QInt b)
 		
 		if (bitT[0])								// Nếu temp < 0.
 		{
-			temp = temp + b;						//Trả temp về giá trị cũ.
-			bitT = temp.GetBits();					
+			temp = temp + b;						//Trả temp về giá trị cũ.				
 		}
 
 		else                                        // Còn không thì
