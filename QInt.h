@@ -16,6 +16,7 @@ private:
 public:
 	QInt(); // Giá trị default của biến QInt (bằng 0).
 	QInt(uint64_t a);
+	QInt(string a);
 	~QInt();
 	friend void ScanQInt(QInt &x); // Nhập giá trị, lưu vào biến QInt.
 	string QIntToString(); // Chuyển các bit trong QInt thành 1 số rất lớn được lưu dưới dạng string.
@@ -136,6 +137,38 @@ QInt::QInt(uint64_t a)
 {
 	head = 0;
 	body = a;
+}
+
+QInt::QInt(string largeNumber)
+{
+	head = body = 0;
+
+	bool Negative = false; // false: số dương | true: số âm.
+
+	if (largeNumber[0] == '-') // Nếu như tring bắt đầu bằng dấu - => là số âm
+	{
+		Negative = true;       // nên Negative ở đây sẽ là true.
+		largeNumber = largeNumber.erase(0, 1); // Tạm quên dấu âm (để tách số đối của nó thành bits sau đó bù 2).
+	}                                          // ví dụ như nhập vào -9 thì bỏ dấu âm đi để tách số 9 thành bit rồi
+											   // bù 2 sẽ có được dãy bit của -9.	
+
+	vector<bool> bits(128); // Tạo mảng bool gồm 128 phần tử để chứa bits (bool là 0 hoặc 1 | true hoặc false).
+
+	for (int i = 0; i < 128; i++)
+	{
+		bits[i] = (largeNumber[largeNumber.size() - 1] - '0') % 2; // Lấy phần dư (1 hoặc 0) gán vào bit thứ i
+		largeNumber = VeryLargeDivision(largeNumber, 2);           // sau đó số mình nhập vào sẽ được chia đôi.
+	}
+
+	reverse(bits.begin(), bits.end()); // Đảo chiều dãy bits, vì sau khi ta chia xong thì phải lấy bits từ cuối lên.
+
+	if (Negative) // Nếu là số âm
+	{
+		SaveBits(bits);       // Lưu dãy bit vào QInt.
+		TwosComplement();     // sau đó bù 2. 
+	}
+	else
+		SaveBits(bits); // Nếu không thì lưu nhưng không bù.
 }
 
 QInt::~QInt()

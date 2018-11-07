@@ -1,11 +1,14 @@
 ﻿#ifndef _FUNC_H
 #define _FUNC_H
 
-
+#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <string>
 #include <math.h>
 #include <vector>
+#include <math.h>
+#include <fstream>
+
 
 using namespace std;
 
